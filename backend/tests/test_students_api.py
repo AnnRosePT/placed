@@ -20,6 +20,7 @@ class FakeQuery:
         self.search = None
         self.limit_value = None
         self.sort = None
+        self.range_value = None
 
     def select(self, *_args, **_kwargs):
         return self
@@ -50,6 +51,10 @@ class FakeQuery:
 
     def limit(self, value):
         self.limit_value = value
+        return self
+
+    def range(self, start, end):
+        self.range_value = (start, end)
         return self
 
     def insert(self, payload):
@@ -92,6 +97,8 @@ class FakeQuery:
             if self.sort:
                 key, descending = self.sort
                 result.sort(key=lambda row: row.get(key), reverse=descending)
+            if self.range_value is not None:
+                result = result[self.range_value[0]: self.range_value[1] + 1]
             if self.limit_value is not None:
                 result = result[: self.limit_value]
             return SimpleNamespace(data=result)

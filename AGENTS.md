@@ -36,6 +36,9 @@ CSV import/export), Placement Prediction (real scikit-learn model), Analytics & 
 - Local development may opt into `DEV_BYPASS_AUTH=true` (frontend: `VITE_DEV_BYPASS_AUTH=true`);
   it is off by default and bypasses authentication and RLS using the Supabase service-role key.
   It must be off before Phase 5 write-role tests or Phase 12 RBAC checks are considered verified.
+- Local demo mode (`DATA_BACKEND=local`, the default when SUPABASE_URL is empty) swaps Supabase for a
+  JSON store (app/services/local_db.py) that mimics the supabase-py query builder, plus Flask-issued
+  HS256 sign-in tokens (POST /api/auth/login). Role decorators mirror the RLS policies so RBAC holds.
 - Flask uses a user-scoped Supabase client (the caller's JWT) for data access so RLS applies.
   The secret/service-role key is used ONLY for admin user management and is never sent to the browser.
 - Role check: the caller must have a row in public.admin_profiles; role-gated routes use a decorator.

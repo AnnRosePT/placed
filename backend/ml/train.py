@@ -80,6 +80,7 @@ def train_model(
     dataset_source: str | None = None,
     output_dir: str | Path = DEFAULT_OUTPUT,
     seed: int = 42,
+    activate: bool = True,
 ) -> dict[str, Any]:
     """Train, evaluate, save, and return metadata; exposed for tests and CLI."""
     if data is None:
@@ -160,7 +161,13 @@ def train_model(
         "RandomForestClassifier": "rf",
         "GradientBoostingClassifier": "gb",
     }[algorithm]
-    version = f"{version_prefix}-{datetime.now().strftime('%Y.%m.%d')}-1"
+    output = Path(output_dir)
+    versions_dir = output / "versions"
+    day = datetime.now().strftime('%Y.%m.%d')
+    sequence = 1
+    while (versions_dir / f"{version_prefix}-{day}-{sequence}").exists():
+        sequence += 1
+    version = f"{version_prefix}-{day}-{sequence}"
     metadata: dict[str, Any] = {
         "version": version,
         "algorithm": algorithm,
@@ -180,12 +187,16 @@ def train_model(
         "threshold": 0.5,
         "best_params": best_search.best_params_,
     }
-    output = Path(output_dir)
-    output.mkdir(parents=True, exist_ok=True)
-    joblib.dump(model, output / "model.joblib")
-    (output / "metadata.json").write_text(
-        json.dumps(metadata, indent=2, allow_nan=False), encoding="utf-8"
-    )
+    # Every run is kept under versions/<version>/ so it can be re-activated later;
+    # the root model.joblib/metadata.json pair is the active model loaded by Flask.
+    version_dir = versions_dir / version
+    version_dir.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(metadata, indent=2, allow_nan=False)
+    joblib.dump(model, version_dir / "model.joblib")
+    (version_dir / "metadata.json").write_text(payload, encoding="utf-8")
+    if activate:
+        joblib.dump(model, output / "model.joblib")
+        (output / "metadata.json").write_text(payload, encoding="utf-8")
     return metadata
 
 

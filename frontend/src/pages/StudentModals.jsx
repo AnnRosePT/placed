@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { studentsService } from "../services/studentsService.js";
 import { Button, DataTable, Icon, Input, Modal, Select, Skeleton, StatusChip } from "../components/ui/index.jsx";
 
@@ -193,6 +194,7 @@ export function ImportModal({ open, onClose, onImported }) {
 }
 
 export function StudentProfileDrawer({ studentId, open, onClose }) {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -230,7 +232,7 @@ export function StudentProfileDrawer({ studentId, open, onClose }) {
           <section className="rounded-xl border border-surface-container p-4"><h3 className="font-headline-sm text-primary">Latest prediction</h3>{profile.latest_prediction ? <div className="mt-2 flex items-center justify-between"><span className="font-body-sm text-on-surface-variant">{profile.latest_prediction.predicted_label}</span><span className="font-label-md text-label-md text-secondary">{(Number(profile.latest_prediction.probability) * 100).toFixed(1)}%</span></div> : <p className="mt-2 font-body-sm text-on-surface-variant">No saved prediction.</p>}</section>
         </>}
       </div>
-      <footer className="flex flex-wrap gap-2 border-t border-surface-container p-4"><Button type="button" variant="secondary" onClick={() => { window.location.assign(`/prediction?student_id=${studentId}`); }}>Run prediction<Icon>online_prediction</Icon></Button><Button type="button" variant="secondary" onClick={() => { window.location.assign(`/skills?student_id=${studentId}`); }}>Skill gap<Icon>radar</Icon></Button><Button type="button" className="ml-auto" variant="secondary" onClick={onClose}>Close</Button></footer>
+      <footer className="flex flex-wrap gap-2 border-t border-surface-container p-4"><Button type="button" variant="secondary" onClick={() => { navigate(`/prediction?student_id=${studentId}`); }}>Run prediction<Icon>online_prediction</Icon></Button><Button type="button" variant="secondary" onClick={() => { navigate(`/skill-gap?student=${studentId}`); }}>Skill gap<Icon>radar</Icon></Button><Button type="button" className="ml-auto" variant="secondary" onClick={onClose}>Close</Button></footer>
     </aside>
   </div>;
 }

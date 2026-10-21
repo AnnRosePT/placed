@@ -4,7 +4,8 @@
 
 The expected source is Kaggle's **Placement Prediction Dataset**, distributed as
 `placementdata.csv`. Download it from Kaggle and place the unmodified file at
-`data/raw/placementdata.csv`. The ML loader uses a deterministic synthetic dataset if that
+`data/raw/placementdata.csv` (a copy named `data/raw/placements.csv` is also detected — that is the file
+included in this repo). The ML loader uses a deterministic synthetic dataset if that
 file is absent; it prints a warning when it does so. Do not rename or hand-edit the source.
 
 Kaggle dataset licenses and redistribution terms can vary by uploader and dataset revision.

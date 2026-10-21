@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from ..auth.decorators import require_auth, require_role
 from ..services.audit import log
+from ..services.settings_service import get_settings as get_settings_values, settings_meta
 
 settings_bp = Blueprint("settings", __name__, url_prefix="/api/settings")
 
@@ -23,6 +24,9 @@ class SettingsUpdate(BaseModel):
     at_risk_probability: float | None = Field(default=None, ge=0, le=1)
     skill_target: float | None = Field(default=None, ge=0, le=100)
     placement_target_rate: float | None = Field(default=None, ge=0, le=1)
+    high_potential_lpa: float | None = Field(default=None, ge=0, le=200)
+    dream_lpa: float | None = Field(default=None, ge=0, le=200)
+    super_dream_lpa: float | None = Field(default=None, ge=0, le=200)
 
     @field_validator("*", mode="before")
     @classmethod
@@ -41,12 +45,22 @@ class SettingsUpdate(BaseModel):
         return value
 
 
+def _now() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
+
+
 @settings_bp.get("")
 @require_auth
 def get_settings():
-    """Return current settings as a key-to-value JSON object."""
-    response = g.db.table("app_settings").select("key, value, updated_by, updated_at").execute()
-    return jsonify({row["key"]: row["value"] for row in (response.data or [])})
+    """Return current settings (with defaults) as a key-to-value JSON object.
+
+    ``_meta`` carries last-saved by/at per key for the Admin page.
+    """
+    values = get_settings_values()
+    values["_meta"] = settings_meta()
+    return jsonify(values)
 
 
 @settings_bp.put("")
@@ -73,10 +87,16 @@ def update_settings():
     if not changes or any(value is None for value in changes.values()):
         return jsonify({"error": {"code": "validation_error", "message": "Provide at least one non-null setting", "details": None}}), 400
 
+    tiers = {**get_settings_values(), **changes}
+    if not float(tiers["high_potential_lpa"]) <= float(tiers["dream_lpa"]) <= float(tiers["super_dream_lpa"]):
+        return jsonify({"error": {"code": "validation_error",
+                                  "message": "Package cutoffs must satisfy high potential ≤ dream ≤ super dream",
+                                  "details": None}}), 400
+    actor = None if g.user["user_id"] == "dev-bypass" else g.user["user_id"]
     saved: dict[str, Any] = {}
     for key, value in changes.items():
         response = g.db.table("app_settings").upsert(
-            {"key": key, "value": value, "updated_by": g.user["user_id"]},
+            {"key": key, "value": value, "updated_by": actor, "updated_at": _now()},
             on_conflict="key",
         ).execute()
         saved[key] = value

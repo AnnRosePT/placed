@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { Button, Icon, Input, Skeleton } from "../components/ui/index.jsx";
 
 export default function LoginPage() {
-  const { session, profile, loading: authLoading, signIn, resetPassword, authError } = useAuth();
+  const { session, profile, loading: authLoading, signIn, resetPassword, authError, authMode } = useAuth();
   const [health, setHealth] = useState(null);
   const [healthError, setHealthError] = useState(false);
   const [email, setEmail] = useState("");
@@ -26,6 +26,7 @@ export default function LoginPage() {
   }, []);
 
   if (authLoading) return <div className="grid min-h-screen place-items-center bg-background p-5"><Skeleton className="h-96 w-full max-w-xl" /></div>;
+  if (authMode === "bypass" && profile) return <Navigate to="/" replace />;
   if (session && profile) return <Navigate to={location.state?.from?.pathname || "/"} replace />;
 
   const handleSubmit = async (event) => {
@@ -78,17 +79,17 @@ export default function LoginPage() {
       </section>
 
       <section className="flex flex-col justify-between p-6 sm:p-8 lg:p-12">
-        <div className="flex items-center justify-between gap-3 font-label-sm text-label-sm text-on-surface-variant"><span className="flex items-center gap-1.5"><Icon className="text-[16px]">admin_panel_settings</Icon>Authorized administrator access</span><span className="rounded bg-surface-container px-2.5 py-1 text-on-surface">Supabase Auth</span></div>
+        <div className="flex items-center justify-between gap-3 font-label-sm text-label-sm text-on-surface-variant"><span className="flex items-center gap-1.5"><Icon className="text-[16px]">admin_panel_settings</Icon>Authorized administrator access</span><span className="rounded bg-surface-container px-2.5 py-1 text-on-surface">{authMode === "local" ? "Local demo auth" : "Supabase Auth"}</span></div>
         <div className="mx-auto my-auto w-full max-w-md py-8">
           <div><p className="mb-2 font-label-sm text-label-sm uppercase tracking-widest text-secondary">Secure sign in</p><h2 className="font-headline-lg text-headline-lg font-bold tracking-tight text-on-surface">Administrative Console</h2><p className="mt-1.5 font-body-md text-on-surface-variant">Sign in with the email and password assigned to your administrator account.</p></div>
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div><div className="mb-1.5 flex items-center justify-between"><label className="font-label-sm text-label-sm font-semibold uppercase tracking-wider" htmlFor="email">Email address</label><Icon className="text-[16px] text-secondary">mail</Icon></div><input id="email" name="email" type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@institution.edu" className="h-11 w-full rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-3 font-body-md text-on-surface outline-none transition focus:ring-2 focus:ring-secondary/30" /></div>
-            <div><div className="mb-1.5 flex items-center justify-between"><label className="font-label-sm text-label-sm font-semibold uppercase tracking-wider" htmlFor="password">Password</label><button type="button" disabled={resetting} onClick={handleReset} className="font-label-sm text-label-sm font-medium text-secondary hover:underline disabled:opacity-60">{resetting ? "Sending…" : "Forgot password?"}</button></div><div className="relative"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} className="h-11 w-full rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-3 pr-12 font-body-md text-on-surface outline-none transition focus:ring-2 focus:ring-secondary/30" /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-0 flex items-center px-3 text-on-surface-variant hover:text-on-surface"><Icon className="text-[18px]">{showPassword ? "visibility_off" : "visibility"}</Icon></button></div></div>
+            <div><div className="mb-1.5 flex items-center justify-between"><label className="font-label-sm text-label-sm font-semibold uppercase tracking-wider" htmlFor="password">Password</label>{authMode !== "local" && <button type="button" disabled={resetting} onClick={handleReset} className="font-label-sm text-label-sm font-medium text-secondary hover:underline disabled:opacity-60">{resetting ? "Sending…" : "Forgot password?"}</button>}</div><div className="relative"><input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} className="h-11 w-full rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-3 pr-12 font-body-md text-on-surface outline-none transition focus:ring-2 focus:ring-secondary/30" /><button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-0 flex items-center px-3 text-on-surface-variant hover:text-on-surface"><Icon className="text-[18px]">{showPassword ? "visibility_off" : "visibility"}</Icon></button></div></div>
             {(error || authError) && <div role="alert" className="rounded-lg bg-error-container px-3 py-2.5 font-body-sm text-on-error-container">{error || authError}</div>}
             {notice && <div role="status" className="rounded-lg bg-secondary-fixed px-3 py-2.5 font-body-sm text-on-secondary-fixed">{notice}</div>}
             <Button type="submit" loading={submitting} className="h-12 w-full shadow-md"><span>{submitting ? "Signing in…" : "Sign In to Dashboard"}</span>{!submitting && <Icon className="text-[18px]">arrow_forward</Icon>}</Button>
           </form>
-          <div className="mt-6 flex items-start gap-2.5 rounded-lg bg-surface-container-low p-3 text-on-surface-variant"><Icon className="mt-0.5 text-[17px] text-secondary">info</Icon><p className="font-body-sm leading-relaxed">Access is limited to active administrators provisioned by your institution. User roles are managed by the placement system.</p></div>
+          <div className="mt-6 flex items-start gap-2.5 rounded-lg bg-surface-container-low p-3 text-on-surface-variant"><Icon className="mt-0.5 text-[17px] text-secondary">info</Icon><p className="font-body-sm leading-relaxed">{authMode === "local" ? "Local demo mode: Supabase is not configured, so Flask signs you in against its local store. The first super admin is defined by LOCAL_ADMIN_EMAIL / LOCAL_ADMIN_PASSWORD in backend/.env (see README)." : "Access is limited to active administrators provisioned by your institution. User roles are managed by the placement system."}</p></div>
         </div>
         <div className="flex items-center justify-between gap-3 border-t border-surface-container pt-4 font-label-sm text-label-sm text-on-surface-variant"><span className="font-mono">API: {import.meta.env.VITE_API_BASE_URL || "/api"}</span><span className="flex items-center gap-1.5 text-secondary"><Icon className="text-[15px]">lock</Icon>Account access</span></div>
       </section>

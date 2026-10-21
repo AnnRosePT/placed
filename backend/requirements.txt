@@ -22,7 +22,11 @@ python-dotenv==1.0.1
 pandas==2.2.3
 scikit-learn==1.5.2
 joblib==1.4.2
+openpyxl==3.1.5        # company-audit.xlsx report (Phase 10)
 
 # ── Testing ────────────────────────────────────────────────────
 pytest==8.2.2
 pytest-flask==1.3.0
+
+# ── Production server (Linux/macOS; on Windows use waitress or `python run.py`) ──
+gunicorn==23.0.0; platform_system != "Windows"

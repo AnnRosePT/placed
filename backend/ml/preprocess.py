@@ -20,6 +20,8 @@ except ImportError:  # pragma: no cover - exercised by direct CLI execution
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DATA_PATH = ROOT / "data" / "raw" / "placementdata.csv"
+# Kaggle mirrors ship the same file as placementdata.csv or placements.csv.
+RAW_DATA_CANDIDATES = [RAW_DATA_PATH, ROOT / "data" / "raw" / "placements.csv"]
 FEATURE_CANDIDATES = [
     "tenth_pct",
     "twelfth_pct",
@@ -93,7 +95,10 @@ def _normalise_header(name: Any) -> str:
 
 def load_raw(path: str | Path | None = None) -> tuple[pd.DataFrame, str]:
     """Load the Kaggle CSV or warn and return a seeded synthetic fallback."""
-    source_path = Path(path) if path is not None else RAW_DATA_PATH
+    if path is not None:
+        source_path = Path(path)
+    else:
+        source_path = next((c for c in RAW_DATA_CANDIDATES if c.is_file()), RAW_DATA_PATH)
     if source_path.is_file():
         return pd.read_csv(source_path), "kaggle"
     warnings.warn(

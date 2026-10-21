@@ -16,7 +16,7 @@ build/
 !.env.example
 
 # ── ML Artifacts (large binaries — exclude from git) ─────────
-backend/ml/artifacts/*.joblib
+backend/ml/artifacts/**/*.joblib
 backend/ml/artifacts/*.pkl
 backend/ml/artifacts/*.bin
 
@@ -48,3 +48,6 @@ logs/
 .coverage
 htmlcov/
 .pytest_cache/
+
+# ── Local demo data store ─────────────────────────────────────
+backend/instance/

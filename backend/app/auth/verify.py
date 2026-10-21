@@ -8,7 +8,23 @@ import jwt
 from flask import current_app
 from jwt import PyJWKClient
 
-from ..services.db import get_user_client
+from ..services.db import get_user_client, is_local_mode
+
+LOCAL_ISSUER = "placementai-local"
+
+
+def issue_local_token(user_id: str, email: str) -> tuple[str, int]:
+    """Sign an HS256 access token for local demo mode."""
+    import time
+
+    ttl = int(current_app.config.get("LOCAL_TOKEN_TTL_SECONDS", 28800))
+    expires_at = int(time.time()) + ttl
+    token = jwt.encode(
+        {"sub": user_id, "email": email, "aud": "authenticated", "iss": LOCAL_ISSUER,
+         "exp": expires_at, "iat": int(time.time())},
+        current_app.config["SECRET_KEY"], algorithm="HS256",
+    )
+    return token, expires_at
 
 
 class AuthenticationError(Exception):
@@ -34,6 +50,16 @@ def verify_supabase_jwt(token: str) -> dict[str, str | None]:
         raise AuthenticationError
 
     config = current_app.config
+    if is_local_mode():
+        try:
+            claims = jwt.decode(
+                token, config["SECRET_KEY"], algorithms=["HS256"], audience="authenticated",
+                issuer=LOCAL_ISSUER, options={"require": ["sub", "exp", "aud", "iss"]},
+            )
+            return _claims_to_identity(claims)
+        except Exception as exc:
+            raise AuthenticationError from exc
+
     base_url = str(config.get("SUPABASE_URL", "")).rstrip("/")
     if base_url:
         try:

@@ -125,6 +125,47 @@ class PlacementModel:
             "unused_by_model": list(self.unused_by_model),
         }
 
+    def _prepare_frame(self, profiles: pd.DataFrame) -> pd.DataFrame:
+        frame = pd.DataFrame(index=profiles.index)
+        for feature in self.features:
+            column = profiles[feature] if feature in profiles.columns else pd.Series(np.nan, index=profiles.index)
+            if feature in BOOL_FEATURES:
+                column = column.map(lambda v: np.nan if v is None or (isinstance(v, float) and np.isnan(v))
+                                    else int(str(v).strip().lower() in {"1", "true", "yes"}))
+            column = pd.to_numeric(column, errors="coerce")
+            if feature in UI_RANGES:
+                low, high = UI_RANGES[feature]
+                column = column.clip(low, high)
+            frame[feature] = column.fillna(float(self.training_medians.get(feature, 0)))
+        return frame[self.features]
+
+    def predict_frame(self, profiles: pd.DataFrame, explain: bool = True) -> list[dict[str, Any]]:
+        """Vectorised batch scoring; contributions via per-feature median substitution."""
+        if profiles.empty:
+            return []
+        frame = self._prepare_frame(profiles)
+        probabilities = self._model.predict_proba(frame)[:, 1]
+        impacts: dict[str, np.ndarray] = {}
+        if explain:
+            for feature in self.features:
+                perturbed = frame.copy()
+                perturbed[feature] = float(self.training_medians.get(feature, 0))
+                impacts[feature] = probabilities - self._model.predict_proba(perturbed)[:, 1]
+        results = []
+        for position, probability in enumerate(probabilities):
+            contributions = []
+            if explain:
+                contributions = sorted(
+                    ({"feature": f, "value": float(frame.iloc[position][f]),
+                      "impact": float(impacts[f][position])} for f in self.features),
+                    key=lambda c: abs(c["impact"]), reverse=True)
+            results.append({
+                "probability": float(probability),
+                "label": "placed" if probability >= self.threshold else "not_placed",
+                "contributions": contributions,
+            })
+        return results
+
     def predict_batch(self, profiles: pd.DataFrame) -> list[dict[str, Any]]:
         """Predict DataFrame rows in order, including local contributions."""
         if not isinstance(profiles, pd.DataFrame):

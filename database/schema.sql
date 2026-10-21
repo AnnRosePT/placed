@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS public.students (
 	placement_status public.placement_status NOT NULL DEFAULT 'in_process',
 	company text,
 	package_lpa numeric(6,2) CHECK (package_lpa >= 0),
+	remediation_status text CHECK (remediation_status IS NULL OR remediation_status IN
+		('enrolled', 'action_required', 'awaiting_retest', 'benchmark_met')),
 	created_by uuid REFERENCES auth.users(id),
 	created_at timestamptz NOT NULL DEFAULT now(),
 	updated_at timestamptz NOT NULL DEFAULT now()
@@ -120,6 +122,9 @@ CREATE INDEX IF NOT EXISTS students_department_batch_year_idx
 CREATE INDEX IF NOT EXISTS students_placement_status_idx
 	ON public.students (placement_status);
 CREATE INDEX IF NOT EXISTS students_cgpa_idx ON public.students (cgpa);
+-- Existing databases: also run migrations/002_remediation_and_package_tiers.sql
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS remediation_status text;
+CREATE INDEX IF NOT EXISTS students_remediation_status_idx ON public.students (remediation_status);
 CREATE INDEX IF NOT EXISTS students_name_lower_idx ON public.students (lower(full_name));
 CREATE INDEX IF NOT EXISTS students_usn_lower_idx ON public.students (lower(usn));
 CREATE INDEX IF NOT EXISTS predictions_student_created_idx
@@ -187,7 +192,10 @@ INSERT INTO public.app_settings (key, value) VALUES
 	('aptitude_threshold', '65'::jsonb),
 	('at_risk_probability', '0.5'::jsonb),
 	('skill_target', '75'::jsonb),
-	('placement_target_rate', '0.85'::jsonb)
+	('placement_target_rate', '0.85'::jsonb),
+	('high_potential_lpa', '6'::jsonb),
+	('dream_lpa', '10'::jsonb),
+	('super_dream_lpa', '20'::jsonb)
 ON CONFLICT (key) DO NOTHING;
 
 ALTER TABLE public.admin_profiles ENABLE ROW LEVEL SECURITY;

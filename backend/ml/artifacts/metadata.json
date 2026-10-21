@@ -1,136 +1,128 @@
 {
-  "version": "lr-2026.10.21-1",
-  "algorithm": "LogisticRegression",
+  "version": "gb-2026.10.21-1",
+  "algorithm": "GradientBoostingClassifier",
   "features": [
     "tenth_pct",
     "twelfth_pct",
     "cgpa",
     "aptitude_score",
-    "technical_score",
     "communication_score",
     "internships",
     "projects",
     "certifications",
-    "backlogs",
     "extracurricular",
     "placement_training"
   ],
-  "unused_by_model": [],
+  "unused_by_model": [
+    "technical_score",
+    "backlogs"
+  ],
   "metrics": {
-    "accuracy": 0.704,
-    "precision": 0.09375,
-    "recall": 0.8333333333333334,
-    "f1": 0.16853932584269662,
-    "roc_auc": 0.8181765790686952,
-    "cv_mean": 0.7620287132698242,
-    "cv_std": 0.047798363636108246,
-    "test_size": 1000
+    "accuracy": 0.8005,
+    "precision": 0.767639902676399,
+    "recall": 0.7520858164481525,
+    "f1": 0.7597832630945214,
+    "roc_auc": 0.8818596848920878,
+    "cv_mean": 0.8776379963303489,
+    "cv_std": 0.012925374962907743,
+    "test_size": 2000
   },
   "confusion_matrix": [
     [
-      674,
-      290
+      970,
+      191
     ],
     [
-      6,
-      30
+      208,
+      631
     ]
   ],
   "calibration_curve": {
     "mean_predicted_probability": [
-      0.061413650615333715,
-      0.13748537470125805,
-      0.20242455750078203,
-      0.267072755035729,
-      0.3359968254180811,
-      0.4054498232335091,
-      0.4780375873364138,
-      0.5605563446996975,
-      0.6623625632941115,
-      0.7996280738642959
+      0.04235385295845972,
+      0.07672438505618646,
+      0.1192463412349047,
+      0.18021937275357966,
+      0.28058042670450956,
+      0.43550855084140017,
+      0.5998826166953548,
+      0.7480537388988711,
+      0.8469767210877049,
+      0.9132989368442662
     ],
     "fraction_positive": [
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.01,
-      0.03,
-      0.05,
-      0.06,
-      0.12,
-      0.09
+      0.035,
+      0.035,
+      0.13,
+      0.165,
+      0.295,
+      0.41,
+      0.575,
+      0.72,
+      0.875,
+      0.955
     ]
   },
   "feature_importances": [
     {
-      "feature": "cgpa",
-      "importance": 0.10882895343476254
-    },
-    {
-      "feature": "backlogs",
-      "importance": 0.09163785154449053
-    },
-    {
-      "feature": "technical_score",
-      "importance": 0.07075265099124015
-    },
-    {
-      "feature": "internships",
-      "importance": 0.04865721530659284
-    },
-    {
       "feature": "aptitude_score",
-      "importance": 0.04038151221761179
-    },
-    {
-      "feature": "certifications",
-      "importance": 0.00389004149377592
-    },
-    {
-      "feature": "twelfth_pct",
-      "importance": 0.000541724296911017
-    },
-    {
-      "feature": "tenth_pct",
-      "importance": 0.0004091747349008745
-    },
-    {
-      "feature": "communication_score",
-      "importance": 4.0341171046565094e-05
-    },
-    {
-      "feature": "projects",
-      "importance": -3.457814661134151e-05
+      "importance": 0.022149435518063677
     },
     {
       "feature": "placement_training",
-      "importance": -0.0004034117104656287
+      "importance": 0.013318632266992703
     },
     {
       "feature": "extracurricular",
-      "importance": -0.004881281696634399
+      "importance": 0.01254395177393206
+    },
+    {
+      "feature": "tenth_pct",
+      "importance": 0.005735366433317979
+    },
+    {
+      "feature": "twelfth_pct",
+      "importance": 0.005470500852600257
+    },
+    {
+      "feature": "cgpa",
+      "importance": 0.00489549615585585
+    },
+    {
+      "feature": "communication_score",
+      "importance": 0.004586588972762984
+    },
+    {
+      "feature": "certifications",
+      "importance": 0.004387631803991177
+    },
+    {
+      "feature": "projects",
+      "importance": 0.0028905253064689163
+    },
+    {
+      "feature": "internships",
+      "importance": -7.453194248114858e-05
     }
   ],
-  "trained_at": "2026-10-21T06:46:39.622643+00:00",
-  "dataset_source": "synthetic",
-  "training_rows": 5000,
+  "trained_at": "2026-10-21T15:03:42.138368+00:00",
+  "dataset_source": "kaggle",
+  "training_rows": 10000,
   "training_medians": {
-    "tenth_pct": 77.81,
-    "twelfth_pct": 74.94,
-    "cgpa": 7.34,
-    "aptitude_score": 66.0,
-    "technical_score": 64.0,
-    "communication_score": 69.0,
+    "tenth_pct": 70.0,
+    "twelfth_pct": 73.0,
+    "cgpa": 7.7,
+    "aptitude_score": 80.0,
+    "communication_score": 88.0,
     "internships": 1.0,
     "projects": 2.0,
-    "certifications": 2.0,
-    "backlogs": 0.0,
-    "extracurricular": false,
+    "certifications": 1.0,
+    "extracurricular": true,
     "placement_training": true
   },
   "threshold": 0.5,
   "best_params": {
-    "classifier__C": 1.5
+    "classifier__learning_rate": 0.06,
+    "classifier__n_estimators": 80
   }
 }

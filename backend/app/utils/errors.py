@@ -37,6 +37,14 @@ def register_error_handlers(app: Flask) -> None:
         text = str(exc).lower()
         if "23505" in text and ("usn" in text or "students" in text):
             return error_response(409, "duplicate_usn", "A student with this USN already exists")
+        if "remediation_status" in text and ("column" in text or "42703" in text or "pgrst204" in text):
+            return error_response(
+                500, "schema_outdated",
+                "The database is missing students.remediation_status. Run "
+                "database/migrations/002_remediation_and_package_tiers.sql in the Supabase SQL editor.")
+        if ("relation" in text and "does not exist" in text) or "pgrst205" in text:
+            return error_response(500, "schema_missing",
+                                  "Database tables are missing. Run database/schema.sql in the Supabase SQL editor.")
         current_app.logger.exception("Unhandled API error")
         details = None
         message = "Internal server error"

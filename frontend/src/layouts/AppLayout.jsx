@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import { DEV_BYPASS, useAuth } from "../context/AuthContext.jsx";
 import api from "../services/api.js";
 import { Icon } from "../components/ui/index.jsx";
 
@@ -9,11 +9,11 @@ const navigation = [
   { label: "Student Management", path: "/students", icon: "school" },
   { label: "Placement Prediction", path: "/prediction", icon: "online_prediction" },
   { label: "Analytics & Reports", path: "/analytics", icon: "monitoring" },
-  { label: "Skill Gap Analysis", path: "/skills", icon: "radar" },
-  { label: "Admin & Settings", path: "/admin", icon: "settings", roles: ["super_admin"] },
+  { label: "Skill Gap Analysis", path: "/skill-gap", icon: "radar" },
+  { label: "Admin & Settings", path: "/admin", icon: "settings", roles: ["super_admin", "auditor"] },
 ];
 const roleLabels = { super_admin: "Super Administrator", placement_officer: "Placement Officer", faculty_mentor: "Faculty Mentor", auditor: "Auditor" };
-const pageNames = { "/": "CSE Placement Operations", "/students": "Student Management", "/prediction": "Placement Prediction", "/analytics": "Analytics & Reports", "/skills": "Skill Gap Analysis", "/admin": "Admin & Settings" };
+const pageNames = { "/": "Placement Operations", "/students": "Student Management", "/prediction": "Placement Prediction", "/analytics": "Analytics & Reports", "/skill-gap": "Skill Gap Analysis", "/admin": "Admin & Settings" };
 
 function initials(name = "") {
   return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "AD";
@@ -76,19 +76,19 @@ export default function AppLayout() {
     <div className="min-h-screen lg:pl-72">
       <header className="fixed left-0 right-0 top-0 z-30 flex h-16 items-center justify-between gap-3 bg-surface/90 px-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] backdrop-blur-xl lg:left-72 lg:px-space-lg">
         <div className="flex min-w-0 items-center gap-space-md">
-          <button type="button" aria-label="Open navigation" className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-container lg:hidden" onClick={() => setDrawerOpen(true)}><Icon>menu</Icon></button>
+          <button type="button" aria-label="Open navigation" className="min-h-[40px] min-w-[40px] rounded-lg p-2 text-on-surface-variant hover:bg-surface-container lg:hidden" onClick={() => setDrawerOpen(true)}><Icon>menu</Icon></button>
           <div className="hidden min-w-0 items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant md:flex"><span>Academic</span><Icon className="text-[14px] text-outline">chevron_right</Icon><span className="truncate font-headline-sm text-headline-sm text-primary">{title}</span></div>
           <form onSubmit={submitSearch} className="relative flex min-w-0 items-center"><Icon className="pointer-events-none absolute left-2 text-[18px] text-outline">search</Icon><input aria-label="Search students" value={search} onChange={(event) => setSearch(event.target.value)} className="h-9 w-[min(42vw,18rem)] rounded-lg bg-surface-container-lowest pl-8 pr-3 font-body-sm outline-none transition focus:ring-2 focus:ring-secondary/20" placeholder="Search Student ID, USN, or Name..." /></form>
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-space-md">
-          <div className="hidden items-center gap-space-xs rounded-full bg-surface-container px-space-sm py-1 font-label-md text-label-md text-on-surface md:flex"><Icon className="text-[14px] text-secondary">calendar_today</Icon><span>Placement Portal</span></div>
+          <div className="hidden items-center gap-space-xs rounded-full bg-surface-container px-space-sm py-1 font-label-md text-label-md text-on-surface md:flex"><Icon className="text-[14px] text-secondary">calendar_today</Icon><span>{health?.auth_mode === "local" ? "Local demo mode" : "Placement Portal"}</span></div>
           <div className="relative">
             <button type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-surface-container-high"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-container font-label-sm text-label-sm font-bold text-on-primary">{initials(profile?.full_name)}</span><span className="hidden min-w-0 flex-col text-left xl:flex"><span className="max-w-40 truncate font-headline-sm text-headline-sm leading-tight text-on-surface">{profile?.full_name || "Administrator"}</span><span className="font-label-sm text-label-sm leading-tight text-on-surface-variant">{roleLabels[profile?.role] || profile?.role}</span></span><Icon className="text-[18px] text-outline">arrow_drop_down</Icon></button>
             {menuOpen && <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-surface-container bg-surface-container-lowest p-2 shadow-xl"><div className="border-b border-surface-container px-3 py-2 xl:hidden"><p className="font-headline-sm text-primary">{profile?.full_name}</p><p className="font-label-sm text-outline">{roleLabels[profile?.role] || profile?.role}</p></div><button type="button" onClick={doSignOut} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-body-sm hover:bg-surface-container-low"><Icon>logout</Icon>Sign out</button></div>}
           </div>
         </div>
       </header>
-      <main className="min-h-screen w-full bg-surface px-4 pb-8 pt-20 sm:px-space-lg"><Outlet /></main>
+      <main className="min-h-screen w-full bg-surface px-4 pb-8 pt-20 sm:px-space-lg">{DEV_BYPASS && <div role="status" className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-4 py-2.5 font-body-sm text-amber-900"><Icon className="text-[18px]">warning</Icon><span><strong>Dev auth bypass is ON.</strong> Everyone is treated as a super admin and Supabase RLS is bypassed with the service-role key. Use only on your own machine; set both DEV_BYPASS flags to false before a demo or deployment.</span></div>}<Outlet /></main>
     </div>
   </div>;
 }

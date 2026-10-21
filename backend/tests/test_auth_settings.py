@@ -79,6 +79,7 @@ def test_active_admin_can_read_me(client, mock_identity):
         "full_name": "Test Admin",
         "role": "placement_officer",
         "department": "CSE",
+        "last_sign_in_at": None,
     }
 
 

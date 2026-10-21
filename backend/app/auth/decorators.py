@@ -62,7 +62,16 @@ def require_auth(view: Callable[..., Any]) -> Callable[..., Any]:
             current_app.logger.exception("Admin profile lookup failed")
             return _error(403, "forbidden", "An active administrator profile is required")
 
+        last_sign_in_at = None
+        if current_app.config.get("DATA_BACKEND") == "local":
+            try:
+                users = client.table("local_users").select("last_sign_in_at").eq(
+                    "user_id", identity["user_id"]).execute().data or []
+                last_sign_in_at = users[0].get("last_sign_in_at") if users else None
+            except Exception:
+                last_sign_in_at = None
         g.user = {
+            "last_sign_in_at": last_sign_in_at,
             "user_id": identity["user_id"],
             "email": identity.get("email") or profile.get("email"),
             "full_name": profile.get("full_name"),

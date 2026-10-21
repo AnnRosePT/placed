@@ -12,7 +12,7 @@ export function Icon({ children, className = "", ...props }) {
 }
 
 export function Button({ variant = "primary", loading = false, disabled, className = "", children, ...props }) {
-  return <button disabled={disabled || loading} className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-body-sm text-body-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${buttonStyles[variant] || buttonStyles.primary} ${className}`} {...props}>
+  return <button disabled={disabled || loading} className={`inline-flex items-center justify-center gap-2 min-h-[40px] rounded-lg px-4 py-2 font-body-sm text-body-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60 ${buttonStyles[variant] || buttonStyles.primary} ${className}`} {...props}>
     {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" />}{children}
   </button>;
 }
@@ -71,8 +71,8 @@ export function ConfirmDialog({ open, title = "Confirm action", message, onConfi
   return <Modal open={open} title={title} onClose={onCancel} footer={<><Button variant="secondary" onClick={onCancel}>Cancel</Button><Button variant={destructive ? "destructive" : "primary"} onClick={onConfirm}>{confirmText}</Button></>}><p className="font-body-md text-on-surface-variant">{message}</p></Modal>;
 }
 
-export function Skeleton({ className = "h-4 w-full" }) {
-  return <div className={`animate-pulse rounded bg-surface-container ${className}`} aria-hidden="true" />;
+export function Skeleton({ className = "h-4 w-full", ...props }) {
+  return <div className={`animate-pulse rounded bg-surface-container ${className}`} aria-hidden="true" {...props} />;
 }
 
 export function EmptyState({ icon = "inbox", title = "No data yet", description, action }) {
@@ -90,4 +90,40 @@ export function PageHeader({ eyebrow, title, subtitle, actions }) {
 export function useDisclosure(initial = false) {
   const [open, setOpen] = useState(initial);
   return { open, onOpen: () => setOpen(true), onClose: () => setOpen(false), toggle: () => setOpen((value) => !value) };
+}
+
+export function Badge({ tone = "neutral", className = "", children }) {
+  const tones = {
+    neutral: "bg-surface-container text-on-surface-variant",
+    info: "bg-secondary-fixed text-on-secondary-fixed-variant",
+    success: "bg-emerald-50 text-emerald-800",
+    warning: "bg-amber-50 text-amber-800",
+    danger: "bg-error-container text-on-error-container",
+    dark: "bg-primary-container text-on-primary",
+  };
+  return <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 font-label-sm text-label-sm font-semibold ${tones[tone] || tones.neutral} ${className}`}>{children}</span>;
+}
+
+export function Segmented({ options, value, onChange, label }) {
+  return <div role="tablist" aria-label={label} className="inline-flex rounded-lg bg-surface-container-low p-1">{options.map((option) => <button key={option.value} type="button" role="tab" aria-selected={value === option.value} onClick={() => onChange(option.value)} className={`min-h-[36px] rounded px-3 py-1.5 font-label-sm text-label-sm transition ${value === option.value ? "bg-surface-container-lowest font-semibold text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>{option.label}</button>)}</div>;
+}
+
+export function Drawer({ open, title, eyebrow, onClose, children, footer, width = "max-w-xl" }) {
+  if (!open) return null;
+  return <div className="fixed inset-0 z-[75]">
+    <button type="button" aria-label="Close panel" className="absolute inset-0 bg-primary/30" onClick={onClose} />
+    <aside role="dialog" aria-modal="true" aria-label={title} className={`absolute right-0 top-0 flex h-full w-full ${width} flex-col bg-surface-container-lowest shadow-2xl`}>
+      <header className="flex items-center justify-between border-b border-surface-container bg-surface-container-low p-5"><div className="min-w-0">{eyebrow && <p className="font-label-sm text-label-sm uppercase tracking-wider text-secondary">{eyebrow}</p>}<h2 className="truncate font-headline-md text-headline-md text-primary">{title}</h2></div><button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-2 hover:bg-surface-container"><Icon>close</Icon></button></header>
+      <div className="flex-1 overflow-y-auto p-5">{children}</div>
+      {footer && <footer className="flex flex-wrap gap-2 border-t border-surface-container p-4">{footer}</footer>}
+    </aside>
+  </div>;
+}
+
+export function SectionTitle({ title, subtitle, icon, actions }) {
+  return <div className="mb-space-md flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="flex min-w-0 items-start gap-2">{icon && <Icon className="mt-0.5 text-secondary">{icon}</Icon>}<div className="min-w-0"><h2 className="font-headline-md text-headline-md text-primary">{title}</h2>{subtitle && <p className="mt-0.5 font-body-sm text-body-sm text-on-surface-variant">{subtitle}</p>}</div></div>{actions && <div className="flex shrink-0 flex-wrap gap-2">{actions}</div>}</div>;
+}
+
+export function Stat({ label, value, hint, tone = "text-primary" }) {
+  return <div className="min-w-0"><p className="font-label-sm text-label-sm uppercase tracking-wider text-outline">{label}</p><p className={`mt-1 font-headline-md text-headline-md tabular-nums ${tone}`}>{value}</p>{hint && <p className="font-body-sm text-body-sm text-on-surface-variant">{hint}</p>}</div>;
 }

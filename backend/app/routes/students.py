@@ -15,6 +15,8 @@ from pydantic import ValidationError
 from ..auth.decorators import require_auth, require_role
 from ..schemas.students import SkillAssessmentIn, StudentCreate, StudentUpdate
 from ..services.audit import log
+from ..services.db import fetch_all
+from ..utils.ratelimit import rate_limit
 
 students_bp = Blueprint("students", __name__, url_prefix="/api/students")
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
@@ -43,6 +45,14 @@ def _is_duplicate(exc: Exception) -> bool:
 
 def _filtered_students(query_args=None):
     args = query_args or request.args
+
+    def build():
+        return _build_student_query(args)
+
+    return fetch_all(build)
+
+
+def _build_student_query(args):
     query = g.db.table("students").select("*")
     search = (args.get("search") or "").strip()
     if search:
@@ -63,7 +73,7 @@ def _filtered_students(query_args=None):
         query = query.gte("cgpa", float(cgpa_min))
     if cgpa_max not in (None, ""):
         query = query.lte("cgpa", float(cgpa_max))
-    return query.execute().data or []
+    return query.order("usn")
 
 
 def _numeric_query_arg(name: str, minimum: float, maximum: float | None = None) -> float | None:
@@ -325,7 +335,8 @@ def _read_import_upload():
 
 
 @students_bp.post("/import")
-@require_role("super_admin", "placement_officer", "faculty_mentor")
+@require_role("super_admin", "placement_officer")
+@rate_limit("RATE_LIMIT_IMPORT_PER_MIN")
 def import_students():
     mode = request.args.get("mode", "upsert")
     dry_run = request.args.get("dry_run", "false").lower() in {"true", "1", "yes"}

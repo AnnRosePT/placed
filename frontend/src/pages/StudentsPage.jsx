@@ -30,6 +30,10 @@ const CGPA_TIERS = [
 const STATUS_LABELS = Object.fromEntries(STATUSES.map(({ value, label }) => [value, label]));
 const TIER_LABELS = Object.fromEntries(CGPA_TIERS.map(({ value, label }) => [value, label]));
 
+function defaultPageSize() {
+	try { return Number(window.localStorage.getItem("placementai.default_page_size")) || 10; } catch { return 10; }
+}
+
 function initials(name = "") {
 	return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "?";
 }
@@ -75,7 +79,7 @@ export default function StudentsPage() {
 	const [status, setStatus] = useState(searchParams.get("status") || "");
 	const [cgpaTier, setCgpaTier] = useState(tierFromParams(searchParams));
 	const page = Math.max(1, Number(searchParams.get("page") || 1));
-	const perPage = Number(searchParams.get("per_page") || 10);
+	const perPage = Number(searchParams.get("per_page") || defaultPageSize());
 	const sort = searchParams.get("sort") || "cgpa";
 	const order = searchParams.get("order") || "desc";
 	const [data, setData] = useState(null);
